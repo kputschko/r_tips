@@ -1,0 +1,28 @@
+---
+title: "R Tips"
+author: "Kevin Putschko"
+date: "August 22, 2018"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+### stringr::str_glue()
+
+How can we easily include column names as values in a table?
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+As of 2018 February, the **stringr** package has a *str_glue* function to accomplish this task.  This function allows for "expressions enclosed by braces will be evaluated as R code".  
+
+```{r}
+mtcars %>% head()
+```
+
+```{r}
+mtcars %>% mutate(Label = str_glue("Miles Per Gallon: {mpg} - Cylinders: {cyl}")) %>% head()
+```
+
+See details here: <https://stringr.tidyverse.org/reference/str_glue.html>

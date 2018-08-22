@@ -1,2 +1,3 @@
-# r_tips
-A collection of brief R tips
+# KP's R Tips
+
+This is a collection of brief R tips.  
