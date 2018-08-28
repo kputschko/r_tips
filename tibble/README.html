@@ -129,25 +129,27 @@ $(document).ready(function () {
 </div>
 
 
-<div id="tibbleenframe-tibbledeframe" class="section level3">
-<h3>tibble::enframe() &amp; tibble::deframe</h3>
-<p>This is a wonderful little tip to use when working with named vectors or lists, and you want to quickly convert them to a dataframe format.</p>
-<p>We’ll begin with <strong>tibble::enframe()</strong>.</p>
+<div id="tibbleenframe" class="section level4">
+<h4>tibble::enframe()</h4>
+<p>This is a wonderful little function to use when working with named vectors or lists, and you want to convert them to a dataframe format.</p>
+<p>Let’s begin by defining a named vector. In my experience, this could represent a mapping of column names from a raw text file to meaningful names.</p>
 <pre class="r"><code>vector_1 &lt;- 
-  c(name_1 = &quot;a&quot;, 
-    name_2 = &quot;b&quot;,
-    name_3 = &quot;c&quot;)
+  c(column_1 = &quot;Person&quot;, 
+    column_2 = &quot;Place&quot;,
+    column_3 = &quot;Thing&quot;)
 
-vector_1</code></pre>
-<pre><code>## name_1 name_2 name_3 
-##    &quot;a&quot;    &quot;b&quot;    &quot;c&quot;</code></pre>
+vector_1 </code></pre>
+<pre><code>## column_1 column_2 column_3 
+## &quot;Person&quot;  &quot;Place&quot;  &quot;Thing&quot;</code></pre>
+<p>Then we can use <strong>tibble::enframe()</strong> to quickly “transpose” the vector into a table containing the <em>name</em> and the <em>value</em>.</p>
 <pre class="r"><code>vector_1 %&gt;% enframe()</code></pre>
 <pre><code>## # A tibble: 3 x 2
-##   name   value
-##   &lt;chr&gt;  &lt;chr&gt;
-## 1 name_1 a    
-## 2 name_2 b    
-## 3 name_3 c</code></pre>
+##   name     value 
+##   &lt;chr&gt;    &lt;chr&gt; 
+## 1 column_1 Person
+## 2 column_2 Place 
+## 3 column_3 Thing</code></pre>
+<p>This will work with lists as well.</p>
 <pre class="r"><code>list_1 &lt;- 
   list(table = tibble(a = 1:5, b = 21:25),
        string = &quot;words, words, words&quot;,
@@ -169,6 +171,7 @@ list_1</code></pre>
 ## 
 ## $vector
 ##  [1] &quot;a&quot; &quot;b&quot; &quot;c&quot; &quot;d&quot; &quot;e&quot; &quot;f&quot; &quot;g&quot; &quot;h&quot; &quot;i&quot; &quot;j&quot;</code></pre>
+<p>After using <strong>tibble::enframe()</strong>, the resulting table contains the name of each list element, and now the value is in the list-table format showing the class and length of the element.</p>
 <pre class="r"><code>list_1 %&gt;% enframe()</code></pre>
 <pre><code>## # A tibble: 3 x 2
 ##   name   value           
@@ -176,17 +179,24 @@ list_1</code></pre>
 ## 1 table  &lt;tibble [5 x 2]&gt;
 ## 2 string &lt;chr [1]&gt;       
 ## 3 vector &lt;chr [10]&gt;</code></pre>
+</div>
+<div id="use-case" class="section level4">
+<h4>Use Case</h4>
+<p>I like to use <strong>tibble::enframe()</strong> when collecting objects that are created conditionally. For example, catching the run times of certain processes. In the following demonstration, we gather the run times of 5 procedures, where the 3rd procedure only runs in certain cases.</p>
 <pre class="r"><code>run_time_1 &lt;- 20
 run_time_2 &lt;- 10
 
-condition_3 &lt;- runif(0, 1, n = 1) 
-if (condition_3 &gt; 0.95) {run_time_3 &lt;- 60}
+condition &lt;- 0 
+if (condition == 1) {run_time_3 &lt;- 60}
 
 run_time_4 &lt;- 30
-run_time_5 &lt;- 40
-
-ls(pattern = &quot;run_time_&quot;) %&gt;% 
-  mget(envir = .GlobalEnv) %&gt;% 
+run_time_5 &lt;- 40</code></pre>
+<p>We use <em>ls()</em> and <em>mget()</em> to gather the objects into a list.</p>
+<pre class="r"><code>env_list &lt;- 
+  ls(pattern = &quot;run_time_&quot;) %&gt;% 
+  mget(envir = .GlobalEnv)</code></pre>
+<p>Finally, we use <strong>tibble::enframe()</strong> and <em>tidyr::unnest()</em> to store these values in a table.</p>
+<pre class="r"><code>env_list %&gt;% 
   enframe() %&gt;% 
   unnest()</code></pre>
 <pre><code>## # A tibble: 4 x 2
@@ -196,6 +206,7 @@ ls(pattern = &quot;run_time_&quot;) %&gt;%
 ## 2 run_time_2    10
 ## 3 run_time_4    30
 ## 4 run_time_5    40</code></pre>
+<p>This is a way to dynamically collect these values, without having to hard code when run_time_3 should be <em>NULL</em> or not.</p>
 </div>
 
 

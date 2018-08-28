@@ -7,28 +7,29 @@ output:
     keep_md: TRUE
 ---
 
-### tibble::enframe() & tibble::deframe
+#### tibble::enframe()
 
 
 
-This is a wonderful little tip to use when working with named vectors or lists, and you want to quickly convert them to a dataframe format.  
+This is a wonderful little function to use when working with named vectors or lists, and you want to convert them to a dataframe format.  
 
-We'll begin with **tibble::enframe()**.
-
+Let's begin by defining a named vector.  In my experience, this could represent a mapping of column names from a raw text file to meaningful names.
 
 ```r
 vector_1 <- 
-  c(name_1 = "a", 
-    name_2 = "b",
-    name_3 = "c")
+  c(column_1 = "Person", 
+    column_2 = "Place",
+    column_3 = "Thing")
 
-vector_1
+vector_1 
 ```
 
 ```
-## name_1 name_2 name_3 
-##    "a"    "b"    "c"
+## column_1 column_2 column_3 
+## "Person"  "Place"  "Thing"
 ```
+
+Then we can use **tibble::enframe()** to quickly "transpose" the vector into a table containing the *name* and the *value*.
 
 
 ```r
@@ -37,13 +38,14 @@ vector_1 %>% enframe()
 
 ```
 ## # A tibble: 3 x 2
-##   name   value
-##   <chr>  <chr>
-## 1 name_1 a    
-## 2 name_2 b    
-## 3 name_3 c
+##   name     value 
+##   <chr>    <chr> 
+## 1 column_1 Person
+## 2 column_2 Place 
+## 3 column_3 Thing
 ```
 
+This will work with lists as well.  
 
 
 ```r
@@ -73,6 +75,7 @@ list_1
 ##  [1] "a" "b" "c" "d" "e" "f" "g" "h" "i" "j"
 ```
 
+After using **tibble::enframe()**, the resulting table contains the name of each list element, and now the value is in the list-table format showing the class and length of the element.
 
 
 ```r
@@ -88,19 +91,36 @@ list_1 %>% enframe()
 ## 3 vector <chr [10]>
 ```
 
+#### Use Case
+
+I like to use **tibble::enframe()** when collecting objects that are created conditionally.  For example, catching the run times of certain processes.  In the following demonstration, we gather the run times of 5 procedures, where the 3rd procedure only runs in certain cases.  
+
 
 ```r
 run_time_1 <- 20
 run_time_2 <- 10
 
-condition_3 <- runif(0, 1, n = 1) 
-if (condition_3 > 0.95) {run_time_3 <- 60}
+condition <- 0 
+if (condition == 1) {run_time_3 <- 60}
 
 run_time_4 <- 30
 run_time_5 <- 40
+```
 
-ls(pattern = "run_time_") %>% 
-  mget(envir = .GlobalEnv) %>% 
+We use *ls()* and *mget()* to gather the objects into a list.
+
+
+```r
+env_list <- 
+  ls(pattern = "run_time_") %>% 
+  mget(envir = .GlobalEnv)
+```
+
+Finally, we use **tibble::enframe()** and *tidyr::unnest()* to store these values in a table. 
+
+
+```r
+env_list %>% 
   enframe() %>% 
   unnest()
 ```
@@ -115,3 +135,4 @@ ls(pattern = "run_time_") %>%
 ## 4 run_time_5    40
 ```
 
+This is a way to dynamically collect these values, without having to hard code when run_time_3 should be *NULL* or not.
