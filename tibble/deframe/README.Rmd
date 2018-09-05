@@ -61,14 +61,14 @@ dict_deframe
 This next part is a bit advanced, but we are going to use *tidyverse* non-standard evaluation (NSE) to change the names of the columns in the *mtcars* dataframe.
 
 ```{r}
-mtcars[1:5] %>% glimpse()
+mtcars[1:6] %>% glimpse()
 
 # dplyr::rename_() - This method is depreciated in favour of the rlang package methods
-mtcars[1:5] %>% rename_(.dots = dict_deframe) %>% glimpse()
+mtcars[1:6] %>% rename_(.dots = dict_deframe) %>% glimpse()
 
 
 # dplyr::rename() with !!! and rlang::syms()
-mtcars[1:5] %>% rename(!!! syms(dict_deframe)) %>% glimpse()
+mtcars[1:6] %>% rename(!!! syms(dict_deframe)) %>% glimpse()
 
 ```
 
