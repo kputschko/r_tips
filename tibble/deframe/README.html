@@ -131,8 +131,8 @@ $(document).ready(function () {
 <div id="tibbledeframe" class="section level3">
 <h3>tibble::deframe()</h3>
 <p>We talked about <strong>tibble::enframe()</strong>, now we’ll talk about its complement, <strong>tibble::deframe()</strong>. The help page tells us the function “converts two-column data frames to a named vector or list, using the first column as name and the second column as value.”</p>
-<p>But what is this function actually doing? It converts a two-column table to a list, assuming the first column contains the names and the second column contains the values of each list element.</p>
-<p>For example, let’s define a list-table.</p>
+<p>But what is this function actually doing? Let’s take a look.</p>
+<p>To begin, we will define a list-table.</p>
 <pre class="r"><code>list_table &lt;- 
   tibble(names  = c(&quot;dataframe&quot;, &quot;strings&quot;, &quot;numbers&quot;),
          values = c(list(mtcars[1:5, ]), list(letters), list(exp(1:10)))
@@ -167,8 +167,8 @@ list_table </code></pre>
 <h3>Use Case</h3>
 <p>Let’s see how this works in practice. For example, if we have a data dictionary table with at least two columns: Full Name and Short Name.</p>
 <pre class="r"><code>dictionary &lt;- 
-  tibble(full  = c(&quot;MilePerGallon&quot;, &quot;Cylinders&quot;, &quot;Displacement&quot;),
-         short = c(&quot;mpg&quot;, &quot;cyl&quot;, &quot;disp&quot;))
+  tibble(full  = c(&quot;MilePerGallon&quot;, &quot;Cylinders&quot;, &quot;Weight&quot;),
+         short = c(&quot;mpg&quot;, &quot;cyl&quot;, &quot;wt&quot;))
 
 dictionary</code></pre>
 <pre><code>## # A tibble: 3 x 2
@@ -176,40 +176,44 @@ dictionary</code></pre>
 ##   &lt;chr&gt;         &lt;chr&gt;
 ## 1 MilePerGallon mpg  
 ## 2 Cylinders     cyl  
-## 3 Displacement  disp</code></pre>
+## 3 Weight        wt</code></pre>
 <p>If we are going to quickly change all the short names to the full names, we can use <strong>tibble::deframe()</strong>. Using <strong>tibble::deframe()</strong> on dictionary, we see the result is a named vector.</p>
 <pre class="r"><code>dict_deframe &lt;- dictionary %&gt;% deframe()
 
 dict_deframe</code></pre>
-<pre><code>## MilePerGallon     Cylinders  Displacement 
-##         &quot;mpg&quot;         &quot;cyl&quot;        &quot;disp&quot;</code></pre>
+<pre><code>## MilePerGallon     Cylinders        Weight 
+##         &quot;mpg&quot;         &quot;cyl&quot;          &quot;wt&quot;</code></pre>
 <p>This next part is a bit advanced, but we are going to use <em>tidyverse</em> non-standard evaluation (NSE) to change the names of the columns in the <em>mtcars</em> dataframe.</p>
-<pre class="r"><code>mtcars[1:5] %&gt;% glimpse()</code></pre>
+<pre class="r"><code>mtcars[1:6] %&gt;% glimpse()</code></pre>
 <pre><code>## Observations: 32
-## Variables: 5
+## Variables: 6
 ## $ mpg  &lt;dbl&gt; 21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19....
 ## $ cyl  &lt;dbl&gt; 6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, ...
 ## $ disp &lt;dbl&gt; 160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0, 146.7, 1...
 ## $ hp   &lt;dbl&gt; 110, 110, 93, 110, 175, 105, 245, 62, 95, 123, 123, 180, ...
-## $ drat &lt;dbl&gt; 3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 3.69, 3.92, 3.9...</code></pre>
+## $ drat &lt;dbl&gt; 3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 3.69, 3.92, 3.9...
+## $ wt   &lt;dbl&gt; 2.620, 2.875, 2.320, 3.215, 3.440, 3.460, 3.570, 3.190, 3...</code></pre>
 <pre class="r"><code># dplyr::rename_() - This method is depreciated in favour of the rlang package methods
-mtcars[1:5] %&gt;% rename_(.dots = dict_deframe) %&gt;% glimpse()</code></pre>
+mtcars[1:6] %&gt;% rename_(.dots = dict_deframe) %&gt;% glimpse()</code></pre>
 <pre><code>## Observations: 32
-## Variables: 5
+## Variables: 6
 ## $ MilePerGallon &lt;dbl&gt; 21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, ...
 ## $ Cylinders     &lt;dbl&gt; 6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, ...
-## $ Displacement  &lt;dbl&gt; 160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0,...
+## $ disp          &lt;dbl&gt; 160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0,...
 ## $ hp            &lt;dbl&gt; 110, 110, 93, 110, 175, 105, 245, 62, 95, 123, 1...
-## $ drat          &lt;dbl&gt; 3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 3.69, ...</code></pre>
-<pre class="r"><code># dplyr::rename() with rlang::syms()
-mtcars[1:5] %&gt;% rename(!!! syms(dict_deframe)) %&gt;% glimpse()</code></pre>
+## $ drat          &lt;dbl&gt; 3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 3.69, ...
+## $ Weight        &lt;dbl&gt; 2.620, 2.875, 2.320, 3.215, 3.440, 3.460, 3.570,...</code></pre>
+<pre class="r"><code># dplyr::rename() with !!! and rlang::syms()
+mtcars[1:6] %&gt;% rename(!!! syms(dict_deframe)) %&gt;% glimpse()</code></pre>
 <pre><code>## Observations: 32
-## Variables: 5
+## Variables: 6
 ## $ MilePerGallon &lt;dbl&gt; 21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, ...
 ## $ Cylinders     &lt;dbl&gt; 6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, ...
-## $ Displacement  &lt;dbl&gt; 160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0,...
+## $ disp          &lt;dbl&gt; 160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0,...
 ## $ hp            &lt;dbl&gt; 110, 110, 93, 110, 175, 105, 245, 62, 95, 123, 1...
-## $ drat          &lt;dbl&gt; 3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 3.69, ...</code></pre>
+## $ drat          &lt;dbl&gt; 3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 3.69, ...
+## $ Weight        &lt;dbl&gt; 2.620, 2.875, 2.320, 3.215, 3.440, 3.460, 3.570,...</code></pre>
+<p>As you can see, the full column names specified in the data dictionary table were renamed in the table based on the corresponding short names.</p>
 </div>
 
 
