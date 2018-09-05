@@ -1,0 +1,75 @@
+---
+title: "R Tips"
+author: "Kevin Putschko"
+date: "September 5, 2018"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(rlang)
+```
+
+### tibble::deframe()
+
+We talked about **tibble::enframe()**, now we'll talk about its complement, **tibble::deframe()**. The help page tells us the function "converts two-column data frames to a named vector or list, using the first column as name and the second column as value."  
+
+But what is this function actually doing?  It converts a two-column table to a list, assuming the first column contains the names and the second column contains the values of each list element.
+
+For example, let's define a list-table.
+
+```{r}
+list_table <- 
+  tibble(names  = c("dataframe", "strings", "numbers"),
+         values = c(list(mtcars[1:5, ]), list(letters), list(exp(1:10)))
+  )
+
+list_table 
+```
+
+We see this is a convient way of storing and viewing any number of lists.  But to get this into an actual list form, we use **tibble::deframe()**.
+
+```{r}
+list_table %>% deframe()
+```
+
+
+
+### Use Case
+
+Let's see how this works in practice.  For example, if we have a data dictionary table with at least two columns: Full Name and Short Name.
+
+```{r}
+
+dictionary <- 
+  tibble(full  = c("MilePerGallon", "Cylinders", "Weight"),
+         short = c("mpg", "cyl", "wt"))
+
+dictionary
+```
+
+If we are going to quickly change all the short names to the full names, we can use **tibble::deframe()**.  Using **tibble::deframe()** on dictionary, we see the result is a named vector.
+
+```{r}
+dict_deframe <- dictionary %>% deframe()
+
+dict_deframe
+```
+
+This next part is a bit advanced, but we are going to use *tidyverse* non-standard evaluation (NSE) to change the names of the columns in the *mtcars* dataframe.
+
+```{r}
+mtcars[1:5] %>% glimpse()
+
+# dplyr::rename_() - This method is depreciated in favour of the rlang package methods
+mtcars[1:5] %>% rename_(.dots = dict_deframe) %>% glimpse()
+
+
+# dplyr::rename() with !!! and rlang::syms()
+mtcars[1:5] %>% rename(!!! syms(dict_deframe)) %>% glimpse()
+
+```
+
+As you can see, the full column names specified in the data dictionary table were renamed in the table based on the corresponding short names.
