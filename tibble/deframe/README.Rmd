@@ -16,9 +16,9 @@ library(rlang)
 
 We talked about **tibble::enframe()**, now we'll talk about its complement, **tibble::deframe()**. The help page tells us the function "converts two-column data frames to a named vector or list, using the first column as name and the second column as value."  
 
-But what is this function actually doing?  It converts a two-column table to a list, assuming the first column contains the names and the second column contains the values of each list element.
+But what is this function actually doing? Let's take a look.
 
-For example, let's define a list-table.
+To begin, we will define a list-table.
 
 ```{r}
 list_table <- 
