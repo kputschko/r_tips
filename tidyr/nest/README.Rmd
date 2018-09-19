@@ -1,0 +1,84 @@
+---
+title: "R Tips"
+author: "Kevin Putschko"
+date: "September 19, 2018"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(gapminder)
+```
+
+### tidyr::nest()
+
+The function **tidyr::nest()** has become an incredible tool in my toolbox.  The description file suggests "nest() creates a list of data frames containing all the nested variables".  Great.  But what does this mean?
+
+It might be helpful to envision **tidyr::nest()** as a helpful way to work with lists, and lists within lists.  Specifically, this function takes the input data and creates subsets of data based on the supplied columns, and stores the result as a list-table.
+
+
+
+```{r}
+mtcars %>% as_tibble()
+```
+
+When providing a single column, we see the result isn't very useful.  The data has been subset into a table (aka "tibble") with 1 row and 1 column.
+
+```{r}
+mtcars %>% as_tibble() %>% nest(gear)
+```
+
+This is because when we specify just *gear*, we are suggesting that all other columns will be used as identifiers, while *gear* is the only data that will be subset.
+
+So, what if we list all columns except *gear*?
+
+```{r}
+mtcars %>% as_tibble() %>% nest(mpg, cyl, disp, hp, drat, wt, qsec, vs, am, carb)
+```
+
+Ah! That's better.  Now we see that the full dataframe has been subset into three distinct tables, with one for each level of gear.  But, that took a lot of typing to make work.
+
+Here are some alternative forms of using this function.  I personally prefer the **dplyr::group_by()** method, as it is clear we are creating a nested dataframe for each grouping value of *gear*.
+
+```{r}
+mtcars %>% as_tibble() %>% nest(-gear)
+mtcars %>% as_tibble() %>% group_by(gear) %>% nest()
+```
+
+
+### Use Case
+
+This is pretty slick, right?  But how is this useful?  My favorite way to use **tidyr::nest()** is with **purrr::map()**, which allows me to apply a single function to every element of a list.
+
+What if I wanted to build a linear model on unique subsets of a dataset?  I could use **tidyr::nest()** to create the subsets, and **purrr::map()** to apply the **lm()** function to each subset. 
+
+```{r}
+iris %>% as_tibble()
+
+iris_nest <- iris %>% as_tibble() %>% group_by(Species) %>% nest()
+
+iris_nest
+```
+
+Now that we've got the unique subsets in a convient form, let's apply the model function.
+
+```{r}
+iris_model <- 
+  iris_nest %>% 
+  mutate(model = map(.x = data, 
+                     .f = ~ lm(data = ., Sepal.Length ~ Sepal.Width + Petal.Length)))
+
+iris_model
+```
+
+And here we have a unique model for each unique subset of data based on the *Species* nesting!
+
+We can check out the results of a model like so
+
+```{r}
+iris_model$model[[1]]
+```
+
+And that's **tidyr::nest()**!
