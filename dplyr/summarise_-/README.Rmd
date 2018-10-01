@@ -1,0 +1,77 @@
+---
+title: "R Tips"
+author: "Kevin Putschko"
+date: "October 1, 2018"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+### dplyr::summarise_*
+
+When we want to create conditional summaries, we can use the **dplyr::summarise_*** functions.  These include:
+
+- *summarise_all*: Applies the summary function on all columns
+- *summarise_at*: Applies the summary function on specified columns
+- *summarise_if*: Applies the summary function if the columns meets a given condition
+
+Let's see how these work in action with the *mtcars* dataframe.
+
+```{r echo=FALSE}
+ex_mtcars <- 
+  mtcars %>% 
+  rownames_to_column() %>% 
+  glimpse()
+
+ex_mtcars
+```
+
+We see that we have both categorical and numeric columns.  For example, we could count the number of distinct values for all columns.  Traditionally, we could do this one column at a time. As you can see, this can easily get tedious with one row of code for each column.
+
+```{r}
+ex_mtcars %>% 
+  summarise(n_mpg = n_distinct(mpg),
+            n_cyl = n_distinct(cyl),
+            n_disp = n_distinct(disp),
+            n_hp = n_distinct(hp))
+```
+
+The function **dplyr::summarise_all** makes turns this into a single line of code.
+
+```{r}
+ex_mtcars %>% summarise_all(n_distinct)
+```
+
+If we want different functions for different columns, we can use **dplyr::summarise_at**.
+
+```{r}
+cols_categorical <- c("rowname", "cyl", "vs", "am", "gear", "carb")
+cols_numeric <- c("mpg", "disp", "hp")
+
+ex_mtcars %>% summarise_at(cols_categorical, n_distinct)
+ex_mtcars %>% summarise_at(cols_numeric, mean)
+
+```
+
+This also allows for a list of summary functions to applied to specified columns.
+
+```{r}
+funs_numeric <- c("mean", "sd", "length")
+
+ex_mtcars %>% 
+  group_by(cyl) %>% 
+  summarise_at("mpg", funs_numeric)
+```
+
+And in the cases when we are aware of column names in advance, we can use **dplyr::summarise_if**.
+
+```{r}
+ex_mtcars %>% summarise_if(is.character, n_distinct)
+ex_mtcars %>% summarise_if(is.numeric, mean)
+```
+
+
